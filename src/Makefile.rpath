@@ -1,0 +1,5 @@
+# Makefile for adding rpath
+
+LDFLAGS = -lFLAC -lsoxr -lm -rdynamic -Wl,-R\$$ORIGIN
+
+include Makefile
