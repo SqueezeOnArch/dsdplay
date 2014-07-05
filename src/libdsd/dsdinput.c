@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 #include "types.h"
 #include "libdsd.h"
 #include "dsdinternals.h"
@@ -44,6 +45,9 @@ dsdfile *dsd_open(const char *name) {
   if (name == NULL) {
     file->stream = stdin;
     file->canseek = false;
+#if defined(_MSC_VER)
+	_setmode(_fileno(stdin), _O_BINARY);
+#endif
   } else {
     if ((file->stream = fopen(name, "rb")) == NULL) {
       free(file);
@@ -80,6 +84,11 @@ dsdfile *dsd_open(const char *name) {
   file->buffer.num_channels = file->channel_num;
   file->buffer.bytes_per_channel = 0;
   file->buffer.data = (u8_t *)malloc(sizeof(u8_t) * file->buffer.max_bytes_per_ch * file->channel_num);
+
+  LOG("type: %s file_size: " FMT_u64 " channels: %u sample_offset: " FMT_u64 " sample_count: " FMT_u64 " sample_stop: " FMT_u64 
+    " dataoffset: " FMT_u64 " datasize: " FMT_u64,
+    file->type == DSF ? "DSF" : "DSDIFF", file->file_size, file->channel_num, file->sample_offset, file->sample_count,
+    file->sample_stop, file->dataoffset, file->datasize);
 
   return file;
 }

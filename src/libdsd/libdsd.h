@@ -23,6 +23,24 @@
  *
  */
 
+//#define DEBUG 1
+
+#ifdef DEBUG
+#define LOG(fmt, ...) fprintf(stderr, "%s:%d " fmt "\n", __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#else
+#define LOG(...)
+#endif
+
+#if defined(linux) && __WORDSIZE == 64
+#define FMT_u64 "%lu"
+#define FMT_x64 "%lx"
+#elif __GLIBC_HAVE_LONG_LONG || defined __GNUC__ || defined (_MSC_VER)
+#define FMT_u64 "%llu"
+#define FMT_x64 "%llx"
+#else
+#error can not support u64_t
+#endif
+
 #include "types.h"
 
 typedef struct {

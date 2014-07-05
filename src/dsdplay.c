@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <fcntl.h>
 #include <FLAC/stream_encoder.h>
 #include <soxr.h>
 #include "libdsd/types.h"
@@ -127,12 +128,10 @@ soxr_t resample_create(char *opt, u32_t sample_rate, u32_t freq_limit, u32_t cha
 		if (q_spec.phase_response < -1) q_spec.phase_response = -1;
 	}
 
-	/*
-	fprintf(stderr,"resampling from %u to %u with soxr_quality_spec_t[precision: %03.1f, passband_end: %03.6f, stopband_begin: %03.6f, "
-			"phase_response: %03.1f, flags: 0x%02x], soxr_io_spec_t[scale: %03.2f]\n", sample_rate, freq_limit, q_spec.precision,
-			q_spec.passband_end, q_spec.stopband_begin, q_spec.phase_response, (unsigned int)q_spec.flags, io_spec.scale);
-	*/
-	
+	LOG("resampling from %u to %u with soxr_quality_spec_t[precision: %03.1f, passband_end: %03.6f, stopband_begin: %03.6f, "
+		"phase_response: %03.1f, flags: 0x%02x], soxr_io_spec_t[scale: %03.2f]", sample_rate, freq_limit, q_spec.precision,
+		q_spec.passband_end, q_spec.stopband_begin, q_spec.phase_response, (unsigned int)q_spec.flags, io_spec.scale);
+
 	resampler = soxr_create(sample_rate, freq_limit, channels, &err, &io_spec, &q_spec, NULL);
 
 	if (err) error("error creating resampler");
@@ -220,6 +219,9 @@ int main(int argc, char *argv[]) {
 		if ((ofile = fopen(outfile, "wb")) == NULL) error("could not output file!");
 	} else {
 		ofile = stdout;
+#if defined(_MSC_VER)
+	_setmode(_fileno(stdout), _O_BINARY);
+#endif
 	}
 	
 	/* 
@@ -304,7 +306,7 @@ int main(int argc, char *argv[]) {
 		dsd_buffer_msb_order(ibuffer);
 		
 		if (halfrate) halfrate_filter(ibuffer, obuffer);
-		
+
 		// process dsd into pcmout1 - right justifying samples if we will send direct to flac
 		if (dop) {
 			dsd_over_pcm(obuffer, pcmout1, !freq_limit);
